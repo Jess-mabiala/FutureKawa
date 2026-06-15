@@ -1,0 +1,29 @@
+package com.example.futurekawa_ecuador.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+ 
+import java.time.OffsetDateTime;
+ 
+@Entity
+@Table(name = "warehouse")
+@Getter @Setter
+public class Warehouse {
+ 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+ 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exploitation_id", nullable = false)
+    private Exploitation exploitation;
+ 
+    @Column(nullable = false)
+    private String name;
+ 
+    private String address;
+ 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt = OffsetDateTime.now();
+}
