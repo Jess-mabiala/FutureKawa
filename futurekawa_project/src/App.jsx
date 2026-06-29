@@ -1,122 +1,118 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useMemo, useEffect } from "react";
+import { useInventory } from "./hooks/useInventory";
+import { lotsApi, alertsApi } from "./api/client";
+import { getConditions, COUNTRY_CODE } from "./api/constants";
+import Sidebar from "./components/Sidebar";
+import LotTable from "./components/LotTable";
+import LotDetail from "./components/LotDetail";
+import AlertPanel from "./components/AlertPanel";
+import { Banner } from "./components/ui";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const { lots, exploitations, loading, error, reload } = useInventory();
+  const conditions = getConditions(COUNTRY_CODE);
+
+  const [selectedExploitation, setSelectedExploitation] = useState(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [selectedLot, setSelectedLot] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+
+  // Charge les alertes actives (vue globale)
+  useEffect(() => {
+    alertsApi.getActive().then(setAlerts).catch(() => setAlerts([]));
+  }, [lots]);
+
+  // Lots filtrés par sélection, triés FIFO (plus ancien d'abord)
+  const visibleLots = useMemo(() => {
+    let list = lots;
+    if (selectedExploitation) {
+      list = list.filter((l) => l.exploitationName === selectedExploitation);
+    }
+    if (selectedWarehouse) {
+      list = list.filter((l) => l.warehouseId === selectedWarehouse);
+    }
+    return [...list].sort(
+      (a, b) => new Date(a.storageDate) - new Date(b.storageDate)
+    );
+  }, [lots, selectedExploitation, selectedWarehouse]);
+
+  async function handleResolveAlert(id) {
+    await alertsApi.resolve(id);
+    const fresh = await alertsApi.getActive();
+    setAlerts(fresh);
+  }
+
+  async function handleStatusChange(lotId, status) {
+    await lotsApi.updateStatus(lotId, status);
+    reload();
+    if (selectedLot?.id === lotId) {
+      const updated = await lotsApi.getById(lotId);
+      setSelectedLot(updated);
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <Sidebar
+        country={conditions.name}
+        conditions={conditions}
+        exploitations={exploitations}
+        selectedExploitation={selectedExploitation}
+        selectedWarehouse={selectedWarehouse}
+        onSelectExploitation={(name) => {
+          setSelectedExploitation(name);
+          setSelectedWarehouse(null);
+          setSelectedLot(null);
+        }}
+        onSelectWarehouse={(id) => {
+          setSelectedWarehouse(id);
+          setSelectedLot(null);
+        }}
+        activeAlertCount={alerts.length}
+      />
 
-      <div className="ticks"></div>
+      <main className="main">
+        <header className="main__head">
+          <div>
+            <p className="eyebrow">Suivi des stocks · {conditions.name}</p>
+            <h1>Entrepôts &amp; conservation</h1>
+          </div>
+          <button className="btn btn--ghost" onClick={reload}>
+            Actualiser
+          </button>
+        </header>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {error && (
+          <Banner tone="danger" title="Connexion au backend impossible">
+            {error.message} Démarrez le backend pays puis cliquez sur Actualiser.
+          </Banner>
+        )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <div className="grid">
+          <section className="panel">
+            <LotTable
+              lots={visibleLots}
+              loading={loading}
+              selectedLotId={selectedLot?.id}
+              onSelect={setSelectedLot}
+            />
+          </section>
+
+          <aside className="rail">
+            <AlertPanel alerts={alerts} onResolve={handleResolveAlert} />
+          </aside>
+        </div>
+
+        {selectedLot && (
+          <LotDetail
+            lot={selectedLot}
+            conditions={conditions}
+            onClose={() => setSelectedLot(null)}
+            onStatusChange={handleStatusChange}
+          />
+        )}
+      </main>
+    </div>
+  );
 }
-
-export default App

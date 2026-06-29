@@ -1,16 +1,66 @@
-# React + Vite
+# FutureKawa — Frontend Web (siège)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface de consultation des stocks et de supervision des conditions de
+conservation (température / humidité) pour les entrepôts de café vert.
 
-Currently, two official plugins are available:
+Construit avec **React + Vite** et **Chart.js**. Consomme l'API REST d'un
+backend pays (Spring Boot).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Prérequis
 
-## React Compiler
+- Node.js 18+
+- Un backend pays démarré et accessible (par défaut `http://localhost:3002`,
+  cf. backend Colombie).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Installation
 
-## Expanding the ESLint configuration
+```bash
+npm install
+cp .env.example .env   # puis ajustez si besoin
+npm run dev            # http://localhost:5173
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Configuration (`.env`)
+
+| Variable             | Rôle                                              | Défaut                  |
+|----------------------|---------------------------------------------------|-------------------------|
+| `VITE_API_BASE_URL`  | URL du backend pays ciblé                         | `http://localhost:3002` |
+| `VITE_COUNTRY_CODE`  | Pays affiché pour les conditions idéales (BR/EC/CO) | `CO`                    |
+
+## Build de production
+
+```bash
+npm run build     # génère dist/
+npm run preview   # sert le build localement
+```
+
+## Fonctionnalités (cf. cahier des charges §III)
+
+- Sélection d'une exploitation puis d'un entrepôt.
+- Liste des lots triés **FIFO** (entrée en stock la plus ancienne en premier),
+  avec ancienneté et statut (conforme / en alerte / périmé).
+- Détail d'un lot : courbes température/humidité depuis sa date de stockage,
+  avec bande de tolérance pays affichée sur le graphique.
+- Panneau des alertes actives (température, humidité, péremption) avec indicateur
+  d'envoi d'email et action de résolution.
+
+## API consommée
+
+| Méthode | Route                                                  | Usage                        |
+|---------|--------------------------------------------------------|------------------------------|
+| GET     | `/api/lots`                                            | Liste des lots               |
+| GET     | `/api/lots/{id}`                                       | Détail d'un lot              |
+| PATCH   | `/api/lots/{id}/status?status=...`                     | Changer le statut            |
+| GET     | `/api/readings/warehouse/{id}/history?from=&to=`       | Historique des mesures       |
+| GET     | `/api/alerts`                                          | Alertes actives              |
+| PATCH   | `/api/alerts/{id}/resolve`                             | Résoudre une alerte          |
+
+## Notes d'architecture
+
+- Les **exploitations et entrepôts** sont reconstruits côté front à partir des
+  champs `exploitationName` / `warehouseName` des lots, le backend n'exposant pas
+  de route de listing dédiée. Ajouter `/api/exploitations` et `/api/warehouses`
+  côté backend simplifierait ce point.
+- Les **relevés capteurs** sont rattachés à un entrepôt (et non à un lot
+  individuel) : le détail d'un lot affiche donc les conditions de son entrepôt
+  sur la période depuis son entrée en stock.
