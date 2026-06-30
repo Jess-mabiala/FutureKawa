@@ -26,7 +26,10 @@ export default function AlertPanel({ alerts, onResolve }) {
           {alerts.map((a) => {
             const meta = ALERT_TYPE[a.type] || { label: a.type };
             return (
-              <li key={a.id} className={`alertcard alertcard--${a.type}`}>
+              <li
+                key={a.country ? `${a.country}-${a.id}` : a.id}
+                className={`alertcard alertcard--${a.type}`}
+              >
                 <div className="alertcard__top">
                   <span className="alertcard__type">{meta.label}</span>
                   <span className="alertcard__time">{timeAgo(a.triggeredAt)}</span>
@@ -49,7 +52,7 @@ export default function AlertPanel({ alerts, onResolve }) {
                   </span>
                   <button
                     className="btn btn--small"
-                    onClick={() => onResolve(a.id)}
+                    onClick={() => onResolve(a.id, a.country)}
                   >
                     Marquer résolue
                   </button>

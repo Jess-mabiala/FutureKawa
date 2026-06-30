@@ -1,117 +1,113 @@
-import { useState, useMemo, useEffect } from "react";
-import { useInventory } from "./hooks/useInventory";
-import { lotsApi, alertsApi } from "./api/client";
-import { getConditions, COUNTRY_CODE } from "./api/constants";
-import Sidebar from "./components/Sidebar";
-import LotTable from "./components/LotTable";
-import LotDetail from "./components/LotDetail";
+import { useState, useMemo } from "react";
+import { useCountryOverview } from "./hooks/useCountryOverview";
+import { useAllExploitations } from "./hooks/useAllExploitations";
+import MultiCountrySidebar from "./components/MultiCountrySidebar";
+import HQDashboard from "./components/HQDashboard";
 import AlertPanel from "./components/AlertPanel";
-import { Banner } from "./components/ui";
 import "./App.css";
+import "./hq-dashboard.css";
+
+const COUNTRY_LABELS = { brazil: "Brésil", ecuador: "Équateur", colombia: "Colombie" };
+const COUNTRIES = ["brazil", "ecuador", "colombia"];
+
+// Ports des backends pays, pour router la résolution d'alerte au bon endroit
+// (le backend siège n'expose que de la lecture, pas d'écriture).
+const COUNTRY_API_PORTS = { brazil: 3001, ecuador: 3002, colombia: 3003 };
 
 export default function App() {
-  const { lots, exploitations, loading, error, reload } = useInventory();
-  const conditions = getConditions(COUNTRY_CODE);
+  const { overview, health, loading, refresh } = useCountryOverview();
+  const exploitationGroups = useAllExploitations(overview);
 
-  const [selectedExploitation, setSelectedExploitation] = useState(null);
-  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
-  const [selectedLot, setSelectedLot] = useState(null);
-  const [alerts, setAlerts] = useState([]);
+  // Pays actuellement ouvert en détail (null = page d'accueil Siège)
+  const [openCountry, setOpenCountry] = useState(null);
 
-  // Charge les alertes actives (vue globale)
-  useEffect(() => {
-    alertsApi.getActive().then(setAlerts).catch(() => setAlerts([]));
-  }, [lots]);
-
-  // Lots filtrés par sélection, triés FIFO (plus ancien d'abord)
-  const visibleLots = useMemo(() => {
-    let list = lots;
-    if (selectedExploitation) {
-      list = list.filter((l) => l.exploitationName === selectedExploitation);
-    }
-    if (selectedWarehouse) {
-      list = list.filter((l) => l.warehouseId === selectedWarehouse);
-    }
-    return [...list].sort(
-      (a, b) => new Date(a.storageDate) - new Date(b.storageDate)
+  // Toutes les alertes actives, tous pays confondus (panneau de droite)
+  const allAlerts = useMemo(() => {
+    const list = [];
+    Object.entries(overview).forEach(([country, data]) => {
+      (data?.alerts || []).forEach((alert) => {
+        list.push({ ...alert, country });
+      });
+    });
+    return list.sort(
+      (a, b) => new Date(b.triggeredAt) - new Date(a.triggeredAt)
     );
-  }, [lots, selectedExploitation, selectedWarehouse]);
+  }, [overview]);
 
-  async function handleResolveAlert(id) {
-    await alertsApi.resolve(id);
-    const fresh = await alertsApi.getActive();
-    setAlerts(fresh);
+  async function handleResolveAlert(alertId, country) {
+  const port = COUNTRY_API_PORTS[country];
+  if (!port) return;
+  try {
+    await fetch(`http://localhost:${port}/api/alerts/${alertId}/resolve`, {
+      method: "PATCH",
+    });
+    refresh?.();
+  } catch (e) {
+    console.error("Échec résolution alerte :", e);
   }
+}
 
-  async function handleStatusChange(lotId, status) {
-    await lotsApi.updateStatus(lotId, status);
-    reload();
-    if (selectedLot?.id === lotId) {
-      const updated = await lotsApi.getById(lotId);
-      setSelectedLot(updated);
-    }
-  }
+  const pageTitle = openCountry
+    ? COUNTRY_LABELS[openCountry]
+    : "Vue Siège — tous pays";
+  const pageEyebrow = openCountry
+    ? `Suivi des stocks · ${COUNTRY_LABELS[openCountry]}`
+    : "Pilotage centralisé";
 
   return (
     <div className="app">
-      <Sidebar
-        country={conditions.name}
-        conditions={conditions}
-        exploitations={exploitations}
-        selectedExploitation={selectedExploitation}
-        selectedWarehouse={selectedWarehouse}
-        onSelectExploitation={(name) => {
-          setSelectedExploitation(name);
-          setSelectedWarehouse(null);
-          setSelectedLot(null);
-        }}
-        onSelectWarehouse={(id) => {
-          setSelectedWarehouse(id);
-          setSelectedLot(null);
-        }}
-        activeAlertCount={alerts.length}
+      <MultiCountrySidebar
+        groups={exploitationGroups}
+        onSelectCountry={setOpenCountry}
+        activeAlertCount={allAlerts.length}
       />
 
       <main className="main">
         <header className="main__head">
           <div>
-            <p className="eyebrow">Suivi des stocks · {conditions.name}</p>
-            <h1>Entrepôts &amp; conservation</h1>
+            <p className="eyebrow">{pageEyebrow}</p>
+            <h1>{pageTitle}</h1>
           </div>
-          <button className="btn btn--ghost" onClick={reload}>
-            Actualiser
-          </button>
-        </header>
 
-        {error && (
-          <Banner tone="danger" title="Connexion au backend impossible">
-            {error.message} Démarrez le backend pays puis cliquez sur Actualiser.
-          </Banner>
-        )}
+          <div className="main__head-actions">
+            <button
+              className={`btn ${!openCountry ? "btn--primary" : "btn--ghost"}`}
+              onClick={() => setOpenCountry(null)}
+            >
+              ◗ Siège
+            </button>
+
+            <select
+              className="select country-select"
+              value={openCountry || ""}
+              onChange={(e) => setOpenCountry(e.target.value || null)}
+              aria-label="Sélectionner un pays"
+            >
+              <option value="">Choisir un pays…</option>
+              {COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {COUNTRY_LABELS[c]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </header>
 
         <div className="grid">
           <section className="panel">
-            <LotTable
-              lots={visibleLots}
+            <HQDashboard
+              overview={overview}
+              health={health}
               loading={loading}
-              selectedLotId={selectedLot?.id}
-              onSelect={setSelectedLot}
+              openCountry={openCountry}
+              onOpenCountry={setOpenCountry}
             />
           </section>
 
           <aside className="rail">
-            <AlertPanel alerts={alerts} onResolve={handleResolveAlert} />
+            <AlertPanel alerts={allAlerts} onResolve={handleResolveAlert} />
           </aside>
         </div>
-
-        {selectedLot && (
-          <LotDetail
-            lot={selectedLot}
-            conditions={conditions}
-            onClose={() => setSelectedLot(null)}
-            onStatusChange={handleStatusChange}
-          />
-        )}
       </main>
     </div>
   );

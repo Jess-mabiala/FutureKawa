@@ -41,8 +41,8 @@ public class MqttSubscriberService {
 
     private final Map<String, String> countryApis = Map.of(
         "Brazil",   "http://localhost:3001",
-        "Ecuador",  "http://localhost:3002",
-        "Colombia", "http://localhost:3003"
+        "Ecuador",  "http://localhost:3003",
+        "Colombia", "http://localhost:3002"
     );
 
     private final ObjectMapper objectMapper = new ObjectMapper()

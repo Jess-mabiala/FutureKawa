@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/central/health")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*")
 public class HealthController {
 
     private final RestTemplate restTemplate;

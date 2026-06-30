@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/central")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*")
 public class ConsolidationController {
 
     private final ConsolidationService consolidationService;

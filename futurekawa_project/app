@@ -1,0 +1,153 @@
+import { useState, useMemo, useEffect } from "react";
+import { useInventory } from "./hooks/useInventory";
+import { lotsApi, alertsApi } from "./api/client";
+import { getConditions, COUNTRY_CODE } from "./api/constants";
+import Sidebar from "./components/Sidebar";
+import LotTable from "./components/LotTable";
+import LotDetail from "./components/LotDetail";
+import AlertPanel from "./components/AlertPanel";
+import HQDashboard from "./components/HQDashboard";
+import { Banner } from "./components/ui";
+import "./App.css";
+import "./hq-dashboard.css";
+
+export default function App() {
+  const { lots, exploitations, loading, error, reload } = useInventory();
+  const conditions = getConditions(COUNTRY_CODE);
+
+  // "warehouse" = vue locale (tableau de lots), "hq" = 3 pays côte à côte
+  const [view, setView] = useState("warehouse");
+
+  const [selectedExploitation, setSelectedExploitation] = useState(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [selectedLot, setSelectedLot] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+  if (view !== "warehouse") return;
+  alertsApi.getActive().then(setAlerts).catch(() => setAlerts([]));
+}, [lots, view]);
+
+  const visibleLots = useMemo(() => {
+    let list = lots;
+    if (selectedExploitation) {
+      list = list.filter((l) => l.exploitationName === selectedExploitation);
+    }
+    if (selectedWarehouse) {
+      list = list.filter((l) => l.warehouseId === selectedWarehouse);
+    }
+    return [...list].sort(
+      (a, b) => new Date(a.storageDate) - new Date(b.storageDate)
+    );
+  }, [lots, selectedExploitation, selectedWarehouse]);
+
+  async function handleResolveAlert(id) {
+    await alertsApi.resolve(id);
+    const fresh = await alertsApi.getActive();
+    setAlerts(fresh);
+  }
+
+  async function handleStatusChange(lotId, status) {
+    await lotsApi.updateStatus(lotId, status);
+    reload();
+    if (selectedLot?.id === lotId) {
+      const updated = await lotsApi.getById(lotId);
+      setSelectedLot(updated);
+    }
+  }
+
+  return (
+    <div className="app">
+      <Sidebar
+        country={conditions.name}
+        conditions={conditions}
+        exploitations={exploitations}
+        selectedExploitation={selectedExploitation}
+        selectedWarehouse={selectedWarehouse}
+        onSelectExploitation={(name) => {
+          setSelectedExploitation(name);
+          setSelectedWarehouse(null);
+          setSelectedLot(null);
+        }}
+        onSelectWarehouse={(id) => {
+          setSelectedWarehouse(id);
+          setSelectedLot(null);
+        }}
+        activeAlertCount={alerts.length}
+      />
+
+      <main className="main">
+        <header className="main__head">
+          <div>
+            <p className="eyebrow">
+              {view === "warehouse"
+                ? `Suivi des stocks · ${conditions.name}`
+                : "Pilotage centralisé"}
+            </p>
+            <h1>
+              {view === "warehouse"
+                ? "Entrepôts & conservation"
+                : "Vue Siège — tous pays"}
+            </h1>
+          </div>
+
+          <div className="main__head-actions">
+            <div className="view-switcher">
+              <button
+                className={`view-switcher__item ${view === "warehouse" ? "is-active" : ""}`}
+                onClick={() => setView("warehouse")}
+              >
+                Entrepôt
+              </button>
+              <button
+                className={`view-switcher__item ${view === "hq" ? "is-active" : ""}`}
+                onClick={() => setView("hq")}
+              >
+                Siège
+              </button>
+            </div>
+            {view === "warehouse" && (
+              <button className="btn btn--ghost" onClick={reload}>
+                Actualiser
+              </button>
+            )}
+          </div>
+        </header>
+
+        {view === "warehouse" && error && (
+          <Banner tone="danger" title="Connexion au backend impossible">
+            {error.message} Démarrez le backend pays puis cliquez sur Actualiser.
+          </Banner>
+        )}
+
+        <div className="grid">
+          <section className="panel">
+            {view === "warehouse" ? (
+              <LotTable
+                lots={visibleLots}
+                loading={loading}
+                selectedLotId={selectedLot?.id}
+                onSelect={setSelectedLot}
+              />
+            ) : (
+              <HQDashboard />
+            )}
+          </section>
+
+          <aside className="rail">
+            <AlertPanel alerts={alerts} onResolve={handleResolveAlert} />
+          </aside>
+        </div>
+
+        {view === "warehouse" && selectedLot && (
+          <LotDetail
+            lot={selectedLot}
+            conditions={conditions}
+            onClose={() => setSelectedLot(null)}
+            onStatusChange={handleStatusChange}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
