@@ -1,0 +1,72 @@
+/* ═══════════════════════════════════════════════════════════
+   FutureKawa — Design system
+   Univers : café vert, traçabilité, entrepôt + siège
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Palette — grains de café vert & parchemin */
+  --parchment:    #F3EEE3;  /* fond crème */
+  --parchment-2:  #EBE3D4;  /* surfaces alternées */
+  --bean-green:   #4A5D43;  /* vert café cru — couleur primaire */
+  --bean-green-d: #36452F;  /* vert profond — texte/headers */
+  --husk:         #8A7A5C;  /* brun balle de grain */
+  --husk-light:   #C4B393;
+  --ink:          #2A2622;  /* texte principal */
+  --ink-soft:     #5C554C;
+
+  /* Statuts */
+  --ok:        #4A7A4E;
+  --ok-bg:     #E2EDD9;
+  --warn:      #C77E2A;
+  --warn-bg:   #F6E7CF;
+  --danger:    #B23A2E;
+  --danger-bg: #F3D9D3;
+
+  /* Données capteur */
+  --temp:     #C2502F;  /* courbe température */
+  --humidity: #2E6E8E;  /* courbe humidité */
+  --tolerance-band: rgba(74, 122, 78, 0.10);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 2px rgba(42,38,34,.06), 0 4px 16px rgba(42,38,34,.06);
+  --shadow-lg: 0 8px 36px rgba(42,38,34,.12);
+  --border: 1px solid rgba(138,122,92,.28);
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--parchment);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--bean-green-d);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+a { color: var(--bean-green); }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
