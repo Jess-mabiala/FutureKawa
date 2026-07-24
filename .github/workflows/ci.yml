@@ -1,0 +1,114 @@
+name: FutureKawa CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+
+  # ─── BACKEND BRÉSIL ───────────────────────────────────────────────
+  backend-brazil:
+    name: Backend Brésil — Tests unitaires
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Lancer les tests
+        working-directory: Backend/futurekawa_brazil
+        run: mvn test --batch-mode
+
+      - name: Publier le rapport de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-brazil
+          path: Backend/futurekawa_brazil/target/surefire-reports/
+
+  # ─── BACKEND COLOMBIE ─────────────────────────────────────────────
+  backend-colombia:
+    name: Backend Colombie — Tests unitaires
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Lancer les tests
+        working-directory: Backend/futurekawa_colombia
+        run: mvn test --batch-mode
+
+      - name: Publier le rapport de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-colombia
+          path: Backend/futurekawa_colombia/target/surefire-reports/
+
+  # ─── BACKEND ÉQUATEUR ─────────────────────────────────────────────
+  backend-ecuador:
+    name: Backend Équateur — Tests unitaires
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Lancer les tests
+        working-directory: Backend/futurekawa_ecuador
+        run: mvn test --batch-mode
+
+      - name: Publier le rapport de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-ecuador
+          path: Backend/futurekawa_ecuador/target/surefire-reports/
+
+  # ─── FRONTEND ─────────────────────────────────────────────────────
+  frontend:
+    name: Frontend React — Tests Vitest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: futurekawa_project/package-lock.json
+
+      - name: Installation des dépendances
+        working-directory: futurekawa_project
+        run: npm ci
+
+      - name: Lancer les tests
+        working-directory: futurekawa_project
+        run: npm test
