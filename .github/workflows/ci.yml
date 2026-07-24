@@ -107,7 +107,7 @@ jobs:
 
       - name: Installation des dépendances
         working-directory: futurekawa_project
-        run: npm ci
+        run: npm install
 
       - name: Lancer les tests
         working-directory: futurekawa_project
