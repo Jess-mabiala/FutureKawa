@@ -111,4 +111,4 @@ jobs:
 
       - name: Lancer les tests
         working-directory: futurekawa_project
-        run: npx vitest run
+        run: npm run test
