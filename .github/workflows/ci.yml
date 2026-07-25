@@ -2,12 +2,11 @@ name: FutureKawa CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
-
   # ─── BACKEND BRÉSIL ───────────────────────────────────────────────
   backend-brazil:
     name: Backend Brésil — Tests unitaires
@@ -98,8 +97,7 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Installation Node.js 18
-        uses: actions/setup-node@v4
+      - name: Setup Node.js        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -107,7 +105,7 @@ jobs:
 
       - name: Installation des dépendances
         working-directory: futurekawa_project
-        run: npm install
+        run: npm ci
 
       - name: Lancer les tests
         working-directory: futurekawa_project
