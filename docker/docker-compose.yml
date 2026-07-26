@@ -1,0 +1,171 @@
+version: "3.9"
+
+services:
+
+  # ─── Infrastructure ─────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: futurekawa_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: futurekawa
+      POSTGRES_PASSWORD: futurekawa
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql
+      - ./init-brazil.sql:/docker-entrypoint-initdb.d/02-init-brazil.sql
+      - ./init-colombia.sql:/docker-entrypoint-initdb.d/03-init-colombia.sql
+      - ./init-ecuador.sql:/docker-entrypoint-initdb.d/04-init-ecuador.sql
+      - ./init-central.sql:/docker-entrypoint-initdb.d/05-init-central.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U futurekawa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: futurekawa_mqtt
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -t test -m ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backends pays ──────────────────────────────────────────
+
+  backend-brazil:
+    build:
+      context: ../Backend/futurekawa_brazil
+      dockerfile: Dockerfile
+    container_name: futurekawa_brazil
+    restart: unless-stopped
+    ports:
+      - "3001:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/futurekawa_brazil
+      SPRING_DATASOURCE_USERNAME: futurekawa
+      SPRING_DATASOURCE_PASSWORD: futurekawa
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      COUNTRY_CODE: BR
+      SERVER_PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+
+  backend-colombia:
+    build:
+      context: ../Backend/futurekawa_colombia
+      dockerfile: Dockerfile
+    container_name: futurekawa_colombia
+    restart: unless-stopped
+    ports:
+      - "3002:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/futurekawa_colombia
+      SPRING_DATASOURCE_USERNAME: futurekawa
+      SPRING_DATASOURCE_PASSWORD: futurekawa
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      COUNTRY_CODE: CO
+      SERVER_PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+
+  backend-ecuador:
+    build:
+      context: ../Backend/futurekawa_ecuador
+      dockerfile: Dockerfile
+    container_name: futurekawa_ecuador
+    restart: unless-stopped
+    ports:
+      - "3003:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/futurekawa_ecuador
+      SPRING_DATASOURCE_USERNAME: futurekawa
+      SPRING_DATASOURCE_PASSWORD: futurekawa
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      COUNTRY_CODE: EC
+      SERVER_PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+
+  # ─── Backend central ─────────────────────────────────────────
+
+  backend-central:
+    build:
+      context: ../Backend/futurekawa_central
+      dockerfile: Dockerfile
+    container_name: futurekawa_central
+    restart: unless-stopped
+    ports:
+      - "8090:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/futurekawa_central
+      SPRING_DATASOURCE_USERNAME: futurekawa
+      SPRING_DATASOURCE_PASSWORD: futurekawa
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      COUNTRY_BRAZIL_URL: http://backend-brazil:8080
+      COUNTRY_COLOMBIA_URL: http://backend-colombia:8080
+      COUNTRY_ECUADOR_URL: http://backend-ecuador:8080
+      SERVER_PORT: 8080
+    depends_on:
+      - backend-brazil
+      - backend-colombia
+      - backend-ecuador
+
+  # ─── Simulateur IoT ─────────────────────────────────────────
+
+  iot-simulator:
+    build:
+      context: ../Backend/futurekawa_iot-simulator
+      dockerfile: Dockerfile
+    container_name: futurekawa_iot_simulator
+    restart: unless-stopped
+    environment:
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      backend-brazil:
+        condition: service_started
+      backend-colombia:
+        condition: service_started
+      backend-ecuador:
+        condition: service_started
+
+  # ─── Frontend ────────────────────────────────────────────────
+
+  frontend:
+    build:
+      context: ../futurekawa_project
+      dockerfile: Dockerfile
+      args:
+        VITE_HQ_BASE_URL: http://localhost:8090
+    container_name: futurekawa_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-central
+
+volumes:
+  postgres_data:

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { hqApi } from "../api/hqClient";
+import { hqApi } from "../api/Hqclient";  
 
 /**
  * Polling périodique des derniers relevés IoT d'un entrepôt via le siège.

@@ -8,7 +8,7 @@ public class HomeController {
 
     @GetMapping("/")
     public String home() {
-        return "Le backend FutureKawa fonctionne sur le port 3000 !";
+        return "Le backend FutureKawa fonctionne sur le port 8090 !";
     }
     
 }

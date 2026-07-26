@@ -1,11 +1,9 @@
-/**
- * Sidebar pour la page d'accueil (vue Siège) : liste les exploitations
- * de TOUS les pays, groupées par pays. Cliquer sur une exploitation
- * navigue vers le détail du pays correspondant.
- */
-export default function MultiCountrySidebar({ groups, onSelectCountry, activeAlertCount }) {
+export default function MultiCountrySidebar({ groups, onSelectCountry, activeAlertCount, isOpen, onClose }) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? "sidebar--open" : ""}`}>
+      {/* Bouton de fermeture — visible uniquement sur mobile */}
+      <button className="sidebar__close" onClick={onClose} aria-label="Fermer le menu">✕</button>
+
       <div className="brand">
         <span className="brand__mark">◗</span>
         <span className="brand__name">FutureKawa</span>
@@ -26,9 +24,7 @@ export default function MultiCountrySidebar({ groups, onSelectCountry, activeAle
                 )}
               </button>
               {group.exploitations.length === 0 ? (
-                <p className="sidebar__hint sidebar__hint--nested">
-                  Aucune donnée chargée.
-                </p>
+                <p className="sidebar__hint sidebar__hint--nested">Aucune donnée chargée.</p>
               ) : (
                 group.exploitations.map((exp) => (
                   <button
@@ -50,8 +46,7 @@ export default function MultiCountrySidebar({ groups, onSelectCountry, activeAle
 
       <div className="alert-tally">
         <span className="alert-tally__dot" />
-        {activeAlertCount} alerte{activeAlertCount > 1 ? "s" : ""} active
-        {activeAlertCount > 1 ? "s" : ""}
+        {activeAlertCount} alerte{activeAlertCount > 1 ? "s" : ""} active{activeAlertCount > 1 ? "s" : ""}
       </div>
     </aside>
   );

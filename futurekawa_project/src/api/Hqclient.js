@@ -8,7 +8,7 @@
 import { ApiError } from "./client";
 
 const HQ_BASE_URL =
-  "http://localhost:3000"; //import.meta.env.VITE_HQ_BASE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  "http://localhost:8090"; //import.meta.env.VITE_HQ_BASE_URL?.replace(/\/$/, "") || "http://localhost:8090";
 
 async function hqRequest(path, options = {}) {
   const url = `${HQ_BASE_URL}${path}`;
@@ -20,7 +20,7 @@ async function hqRequest(path, options = {}) {
     });
   } catch (networkError) {
     throw new ApiError(
-      "Le backend siège ne répond pas. Vérifiez qu'il est démarré (port 3000).",
+      "Le backend siège ne répond pas. Vérifiez qu'il est démarré (port 8090).",
       0,
       networkError
     );

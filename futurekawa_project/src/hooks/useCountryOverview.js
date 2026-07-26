@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { hqApi } from "../api/hqClient";
+import { hqApi } from "../api/Hqclient";
 
 const COUNTRIES = ["brazil", "ecuador", "colombia"];
 

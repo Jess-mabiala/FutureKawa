@@ -2,12 +2,11 @@ name: FutureKawa CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
-
   # ─── BACKEND BRÉSIL ───────────────────────────────────────────────
   backend-brazil:
     name: Backend Brésil — Tests unitaires
@@ -89,7 +88,7 @@ jobs:
           name: surefire-ecuador
           path: Backend/futurekawa_ecuador/target/surefire-reports/
 
-  # ─── FRONTEND ─────────────────────────────────────────────────────
+    # ─── FRONTEND ─────────────────────────────────────────────────────
   frontend:
     name: Frontend React — Tests Vitest
     runs-on: ubuntu-latest
@@ -98,17 +97,15 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Installation Node.js 18
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: futurekawa_project/package-lock.json
+          node-version: '20'
 
       - name: Installation des dépendances
-        working-directory: futurekawa_project
-        run: npm ci
+        working-directory: Backend/futurekawa_central/ProjetInnova/AlbumPhoto
+        run: npm install
 
       - name: Lancer les tests
-        working-directory: futurekawa_project
-        run: npx vitest run
+        working-directory: Backend/futurekawa_central/ProjetInnova/AlbumPhoto
+        run: npm run test

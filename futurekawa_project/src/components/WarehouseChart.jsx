@@ -11,7 +11,7 @@ import {
   Filler,
 } from "chart.js";
 import "chartjs-adapter-date-fns";
-import { hqApi } from "../api/hqClient";
+import { hqApi } from "../api/Hqclient";
 import { TEMP_TOLERANCE, HUMIDITY_TOLERANCE } from "../api/constants";
 import { Spinner, EmptyState } from "./ui";
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { hqApi } from "../api/hqClient";
+import { hqApi } from "../api/Hqclient";
 
 /**
  * Vue consolidée siège : agrège lots + alertes des 3 pays,

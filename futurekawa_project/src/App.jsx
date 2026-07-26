@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useCountryOverview } from "./hooks/useCountryOverview";
-import { useAllExploitations } from "./hooks/useAllExploitations";
+import { useAllExploitations } from "./hooks/UseAllExploitations";
 import MultiCountrySidebar from "./components/MultiCountrySidebar";
 import HQDashboard from "./components/HQDashboard";
 import AlertPanel from "./components/AlertPanel";
@@ -9,19 +9,14 @@ import "./hq-dashboard.css";
 
 const COUNTRY_LABELS = { brazil: "Brésil", ecuador: "Équateur", colombia: "Colombie" };
 const COUNTRIES = ["brazil", "ecuador", "colombia"];
-
-// Ports des backends pays, pour router la résolution d'alerte au bon endroit
-// (le backend siège n'expose que de la lecture, pas d'écriture).
 const COUNTRY_API_PORTS = { brazil: 3001, ecuador: 3002, colombia: 3003 };
 
 export default function App() {
   const { overview, health, loading, refresh } = useCountryOverview();
   const exploitationGroups = useAllExploitations(overview);
-
-  // Pays actuellement ouvert en détail (null = page d'accueil Siège)
   const [openCountry, setOpenCountry] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Toutes les alertes actives, tous pays confondus (panneau de droite)
   const allAlerts = useMemo(() => {
     const list = [];
     Object.entries(overview).forEach(([country, data]) => {
@@ -29,44 +24,60 @@ export default function App() {
         list.push({ ...alert, country });
       });
     });
-    return list.sort(
-      (a, b) => new Date(b.triggeredAt) - new Date(a.triggeredAt)
-    );
+    return list.sort((a, b) => new Date(b.triggeredAt) - new Date(a.triggeredAt));
   }, [overview]);
 
   async function handleResolveAlert(alertId, country) {
-  const port = COUNTRY_API_PORTS[country];
-  if (!port) return;
-  try {
-    await fetch(`http://localhost:${port}/api/alerts/${alertId}/resolve`, {
-      method: "PATCH",
-    });
-    refresh?.();
-  } catch (e) {
-    console.error("Échec résolution alerte :", e);
+    const port = COUNTRY_API_PORTS[country];
+    if (!port) return;
+    try {
+      await fetch(`http://localhost:${port}/api/alerts/${alertId}/resolve`, { method: "PATCH" });
+      refresh?.();
+    } catch (e) {
+      console.error("Échec résolution alerte :", e);
+    }
   }
-}
 
-  const pageTitle = openCountry
-    ? COUNTRY_LABELS[openCountry]
-    : "Vue Siège — tous pays";
+  function handleSelectCountry(country) {
+    setOpenCountry(country);
+    setSidebarOpen(false);
+  }
+
+  const pageTitle = openCountry ? COUNTRY_LABELS[openCountry] : "Vue Siège — tous pays";
   const pageEyebrow = openCountry
     ? `Suivi des stocks · ${COUNTRY_LABELS[openCountry]}`
     : "Pilotage centralisé";
 
   return (
     <div className="app">
+      {/* Overlay mobile pour fermer la sidebar */}
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
       <MultiCountrySidebar
         groups={exploitationGroups}
-        onSelectCountry={setOpenCountry}
+        onSelectCountry={handleSelectCountry}
         activeAlertCount={allAlerts.length}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <main className="main">
         <header className="main__head">
-          <div>
-            <p className="eyebrow">{pageEyebrow}</p>
-            <h1>{pageTitle}</h1>
+          <div className="main__head-left">
+            {/* Bouton hamburger — visible uniquement sur mobile */}
+            <button
+              className="hamburger"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Ouvrir le menu"
+            >
+              <span /><span /><span />
+            </button>
+            <div>
+              <p className="eyebrow">{pageEyebrow}</p>
+              <h1>{pageTitle}</h1>
+            </div>
           </div>
 
           <div className="main__head-actions">
@@ -76,7 +87,6 @@ export default function App() {
             >
               ◗ Siège
             </button>
-
             <select
               className="select country-select"
               value={openCountry || ""}
@@ -85,9 +95,7 @@ export default function App() {
             >
               <option value="">Choisir un pays…</option>
               {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {COUNTRY_LABELS[c]}
-                </option>
+                <option key={c} value={c}>{COUNTRY_LABELS[c]}</option>
               ))}
             </select>
           </div>
