@@ -98,7 +98,7 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Installation Node.js 18
+      - name: Installation Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
