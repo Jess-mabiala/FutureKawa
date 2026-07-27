@@ -2,6 +2,7 @@ package com.example.futurekawa_colombia.service;
 
 import com.example.futurekawa_colombia.dto.LotRequest;
 import com.example.futurekawa_colombia.dto.LotResponse;
+import com.example.futurekawa_colombia.entity.Exploitation;
 import com.example.futurekawa_colombia.entity.Lot;
 import com.example.futurekawa_colombia.entity.Warehouse;
 import com.example.futurekawa_colombia.enums.LotStatus;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.example.futurekawa_colombia.entity.Exploitation;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -36,9 +38,14 @@ class LotServiceTest {
 
     @BeforeEach
     void setUp() {
+        Exploitation exploitation = new Exploitation();
+        exploitation.setId(1);
+        exploitation.setName("Exploitation Antioquia");
+
         warehouse = new Warehouse();
         warehouse.setId(1);
         warehouse.setName("Entrepôt BR-1");
+        warehouse.setExploitation(exploitation);
     }
 
     private Lot makeLot(Integer id, String code, LocalDate date, LotStatus status) {
