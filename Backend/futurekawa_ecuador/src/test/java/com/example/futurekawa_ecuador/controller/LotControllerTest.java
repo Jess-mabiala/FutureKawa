@@ -1,9 +1,9 @@
-package com.example.futurekawa_brazil.controller;
+package com.example.futurekawa_ecuador.controller;
 
-import com.example.futurekawa_brazil.dto.LotRequest;
-import com.example.futurekawa_brazil.dto.LotResponse;
-import com.example.futurekawa_brazil.enums.LotStatus;
-import com.example.futurekawa_brazil.service.LotService;
+import com.example.futurekawa_ecuador.dto.LotRequest;
+import com.example.futurekawa_ecuador.dto.LotResponse;
+import com.example.futurekawa_ecuador.enums.LotStatus;
+import com.example.futurekawa_ecuador.service.LotService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import com.example.futurekawa_ecuador.controller.LotController;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;

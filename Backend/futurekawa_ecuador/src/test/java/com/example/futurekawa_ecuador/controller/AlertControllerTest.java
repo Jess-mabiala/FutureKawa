@@ -1,14 +1,17 @@
-package com.example.futurekawa_brazil.controller;
+package com.example.futurekawa_ecuador.controller;
 
-import com.example.futurekawa_brazil.dto.AlertResponse;
-import com.example.futurekawa_brazil.enums.AlertType;
-import com.example.futurekawa_brazil.service.AlertService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.example.futurekawa_ecuador.dto.AlertResponse;
+import com.example.futurekawa_ecuador.enums.AlertType;
+import com.example.futurekawa_ecuador.service.AlertService;
+import com.example.futurekawa_ecuador.controller.AlertController;
+
 
 import java.time.OffsetDateTime;
 import java.util.List;
