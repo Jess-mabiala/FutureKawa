@@ -14,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import com.example.futurekawa_ecuador.controller.LotController;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;

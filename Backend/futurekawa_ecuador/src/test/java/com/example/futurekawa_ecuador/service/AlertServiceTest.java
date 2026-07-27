@@ -1,9 +1,9 @@
-package com.example.futurekawa_brazil.service;
+package com.example.futurekawa_ecuador.service;
 
-import com.example.futurekawa_brazil.dto.AlertResponse;
-import com.example.futurekawa_brazil.entity.*;
-import com.example.futurekawa_brazil.enums.AlertType;
-import com.example.futurekawa_brazil.repository.AlertRepository;
+import com.example.futurekawa_ecuador.dto.AlertResponse;
+import com.example.futurekawa_ecuador.entity.*;
+import com.example.futurekawa_ecuador.enums.AlertType;
+import com.example.futurekawa_ecuador.repository.AlertRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,13 +1,12 @@
-package com.example.futurekawa_brazil.service;
+package com.example.futurekawa_ecuador.service;
 
-import com.example.futurekawa_brazil.dto.LotRequest;
-import com.example.futurekawa_brazil.dto.LotResponse;
-import com.example.futurekawa_brazil.entity.Exploitation;
-import com.example.futurekawa_brazil.entity.Lot;
-import com.example.futurekawa_brazil.entity.Warehouse;
-import com.example.futurekawa_brazil.enums.LotStatus;
-import com.example.futurekawa_brazil.repository.LotRepository;
-import com.example.futurekawa_brazil.repository.WarehouseRepository;
+import com.example.futurekawa_ecuador.dto.LotRequest;
+import com.example.futurekawa_ecuador.dto.LotResponse;
+import com.example.futurekawa_ecuador.entity.Lot;
+import com.example.futurekawa_ecuador.entity.Warehouse;
+import com.example.futurekawa_ecuador.enums.LotStatus;
+import com.example.futurekawa_ecuador.repository.LotRepository;
+import com.example.futurekawa_ecuador.repository.WarehouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,17 +34,12 @@ class LotServiceTest {
 
     private Warehouse warehouse;
 
-@BeforeEach
-void setUp() {
-    Exploitation exploitation = new Exploitation();
-    exploitation.setId(1);
-    exploitation.setName("Exploitation Amazônia");
-
-    warehouse = new Warehouse();
-    warehouse.setId(1);
-    warehouse.setName("Entrepôt BR-1");
-    warehouse.setExploitation(exploitation); // ← ajouter cette ligne
-}
+    @BeforeEach
+    void setUp() {
+        warehouse = new Warehouse();
+        warehouse.setId(1);
+        warehouse.setName("Entrepôt BR-1");
+    }
 
     private Lot makeLot(Integer id, String code, LocalDate date, LotStatus status) {
         Lot lot = new Lot();
